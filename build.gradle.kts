@@ -27,6 +27,8 @@ tasks.test {
     useJUnitPlatform()
 }
 
+// Use default javadoc doclint settings (strict) so we can surface missing tags and improve docs.
+
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {

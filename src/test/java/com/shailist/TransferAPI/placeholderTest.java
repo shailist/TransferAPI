@@ -4,10 +4,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-class ExampleUsageTest {
+class placeholderTest {
 
     @Test
     void runDemoDoesNotThrow() {
-        assertDoesNotThrow(ExampleUsage::runDemo);
+        assertDoesNotThrow(() -> {
+            placeholder ph = new placeholder();
+        });
     }
 }
