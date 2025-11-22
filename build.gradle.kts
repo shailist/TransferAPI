@@ -5,7 +5,7 @@ plugins {
     `maven-publish`
 }
 
-group = "com.shailist"
+group = "com.shailist.hytale"
 version = "1.0-SNAPSHOT"
 
 repositories {
