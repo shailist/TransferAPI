@@ -21,6 +21,7 @@ package com.shailist.hytale.test.transfer.unittests;
 
 import java.util.Iterator;
 
+import com.shailist.hytale.api.transfer.v1.storage.base.ResourceAmount;
 import com.shailist.hytale.test.transfer.unittests.utils.SingleStringStorage;
 import com.shailist.hytale.test.transfer.unittests.utils.StringConstants;
 import com.shailist.hytale.test.transfer.unittests.utils.StringVariant;
@@ -34,8 +35,89 @@ import com.shailist.hytale.api.transfer.v1.storage.base.SingleVariantStorage;
 import com.shailist.hytale.api.transfer.v1.transaction.Transaction;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BaseStorageTests {
+    @Test
+    public void testSingleVariantStorage() {
+        SingleVariantStorage<StringVariant> storage = new SingleVariantStorage<>() {
+            @Override
+            protected StringVariant getBlankVariant() {
+                return StringVariant.blank();
+            }
+
+            @Override
+            protected long getCapacity(StringVariant variant) {
+                return 10 * StringConstants.UNIT;
+            }
+        };
+
+        StringVariant hello = StringVariant.of(StringConstants.HELLO);
+        StringVariant world = StringVariant.of(StringConstants.WORLD);
+
+        assertEquals(0L, storage.amount);
+        assertEquals(StringVariant.blank(), storage.variant);
+
+        // Insertion into an empty storage should succeed.
+        try (Transaction tx = Transaction.openOuter()) {
+            assertEquals(StringConstants.UNIT, storage.insert(hello, StringConstants.UNIT, tx));
+            tx.commit();
+        }
+        assertEquals(StringConstants.UNIT, storage.amount);
+        assertEquals(hello, storage.variant);
+
+        // The string should be visible.
+        assertEquals(hello, StorageUtil.findStoredResource(storage));
+        assertNull(StorageUtil.findStoredResource(storage, fv -> fv.isOf(StringConstants.WORLD)));
+
+        assertEquals(hello, StorageUtil.findExtractableResource(storage, null));
+        assertEquals(new ResourceAmount<>(hello, StringConstants.UNIT), StorageUtil.findExtractableContent(storage, null));
+
+        // Insertion into a non-empty storage with the same variant should succeed.
+        try (Transaction tx = Transaction.openOuter()) {
+            assertEquals(StringConstants.UNIT, storage.insert(hello, StringConstants.UNIT, tx));
+            tx.commit();
+        }
+        assertEquals(2 * StringConstants.UNIT, storage.amount);
+        assertEquals(hello, storage.variant);
+
+        // Insertion into a non-empty storage with a different variant should fail.
+        try (Transaction tx = Transaction.openOuter()) {
+            assertEquals(0L, storage.insert(world, StringConstants.UNIT, tx));
+            tx.commit();
+        }
+        assertEquals(2 * StringConstants.UNIT, storage.amount);
+        assertEquals(hello, storage.variant);
+
+        // Extraction from a non-empty storage with the same variant should succeed.
+        try (Transaction tx = Transaction.openOuter()) {
+            assertEquals(StringConstants.UNIT, storage.extract(hello, StringConstants.UNIT, tx));
+            tx.commit();
+        }
+        assertEquals(StringConstants.UNIT, storage.amount);
+        assertEquals(hello, storage.variant);
+
+        // Extraction from a non-empty storage with a different variant should fail.
+        try (Transaction tx = Transaction.openOuter()) {
+            assertEquals(0L, storage.extract(world, StringConstants.UNIT, tx));
+            tx.commit();
+        }
+        assertEquals(StringConstants.UNIT, storage.amount);
+        assertEquals(hello, storage.variant);
+
+        // Empty the storage for the next test
+        storage.amount = 0L;
+        storage.variant = StringVariant.blank();
+
+        // Extraction from an empty storage should fail.
+        try (Transaction tx = Transaction.openOuter()) {
+            assertEquals(0L, storage.extract(hello, StringConstants.UNIT, tx));
+            tx.commit();
+        }
+        assertEquals(0, storage.amount);
+        assertEquals(StringVariant.blank(), storage.variant);
+    }
+
 	@Test
 	public void testFilteringStorage() {
 		SingleVariantStorage<StringVariant> storage = new SingleVariantStorage<>() {
