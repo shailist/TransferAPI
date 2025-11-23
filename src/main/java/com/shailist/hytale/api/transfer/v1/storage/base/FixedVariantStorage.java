@@ -1,6 +1,8 @@
 package com.shailist.hytale.api.transfer.v1.storage.base;
 
 import com.shailist.hytale.api.transfer.v1.storage.TransferVariant;
+import com.shailist.hytale.api.transfer.v1.transaction.TransactionContext;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A storage that can store a fixed transfer variant or be empty.
@@ -24,5 +26,13 @@ public abstract class FixedVariantStorage<T extends TransferVariant<?>> extends 
     @Override
     protected boolean canExtract(T variant) {
         return getAllowedVariant().equals(variant);
+    }
+
+    public long insert(long maxAmount, @NotNull TransactionContext transaction) {
+        return super.insert(getAllowedVariant(), maxAmount, transaction);
+    }
+
+    public long extract(long maxAmount, @NotNull TransactionContext transaction) {
+        return super.extract(getAllowedVariant(), maxAmount, transaction);
     }
 }
