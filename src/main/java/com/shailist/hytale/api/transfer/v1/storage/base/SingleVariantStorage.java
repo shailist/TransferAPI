@@ -19,8 +19,6 @@
 
 package com.shailist.hytale.api.transfer.v1.storage.base;
 
-import java.util.function.Supplier;
-
 import com.shailist.hytale.api.transfer.v1.storage.StoragePreconditions;
 import com.shailist.hytale.api.transfer.v1.storage.TransferVariant;
 import com.shailist.hytale.api.transfer.v1.transaction.TransactionContext;
