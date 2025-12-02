@@ -4,11 +4,11 @@ import org.gradle.external.javadoc.StandardJavadocDocletOptions
 
 plugins {
     id("java")
-    `maven-publish`
+    id("maven-publish")
 }
 
 group = "com.shailist.hytale"
-version = "1.0-SNAPSHOT"
+version = "0.1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -53,5 +53,23 @@ publishing {
     repositories {
         // Publish to local maven repository by default; users can add other repositories later.
         mavenLocal()
+
+        // Publish to HytaleModding repository. The repository path will
+        // switch between snapshots and releases depending on the project version.
+        maven {
+            val hytaleModdingBase = "https://maven.hytalemodding.xyz"
+            val hytaleModdingRepo = if (version.toString().endsWith("SNAPSHOT")) "maven-snapshots" else "maven-releases"
+            url = uri("$hytaleModdingBase/repository/$hytaleModdingRepo/")
+
+            // Credentials can be provided in `~/.gradle/gradle.properties` or via
+            // environment variables `HYTALEMODDING_USERNAME` and `HYTALEMODDING_PASSWORD`.
+            val hytaleModdingUser: String? = findProperty("hytaleModdingUsername") as String? ?: System.getenv("HYTALEMODDING_USERNAME")
+            val hytaleModdingPass: String? = findProperty("hytaleModdingPassword") as String? ?: System.getenv("HYTALEMODDING_PASSWORD")
+
+            credentials {
+                username = hytaleModdingUser
+                password = hytaleModdingPass
+            }
+        }
     }
 }
