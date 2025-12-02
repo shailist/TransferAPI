@@ -51,7 +51,7 @@ import org.jetbrains.annotations.NotNull;
  *     <li>{@link CombinedStorage} can be used to combine multiple instances, for example to combine multiple "slots" in one big storage.</li>
  *     <li>{@link ExtractionOnlyStorage} and {@link InsertionOnlyStorage} can be used when only extraction or insertion is needed.</li>
  *     <li>Resource-specific base implementations may also be available.
- *     For example, Fabric API provides {@link SingleVariantStorage} to accelerate implementations of transfer variant storages.</li>
+ *     For example, the API provides {@link SingleVariantStorage} to accelerate implementations of transfer variant storages.</li>
  * </ul>
  *
  * <p><b>Important note:</b> Unless otherwise specified, all transfer functions take a non-blank resource
@@ -68,6 +68,9 @@ import org.jetbrains.annotations.NotNull;
 public interface Storage<T> extends Iterable<StorageView<T>> {
     /**
      * Return an empty storage.
+     *
+     * @param <T> The generic type of the returned storage.
+     * @return An empty storage instance.
      */
     @SuppressWarnings("unchecked")
     static <T> Storage<T> empty() {
@@ -75,10 +78,12 @@ public interface Storage<T> extends Iterable<StorageView<T>> {
     }
 
     /**
-     * Return false if calling {@link #insert} will absolutely always return 0, or true otherwise or in doubt.
+     * Return whether insertion may be supported by this storage.
      *
-     * <p>Note: This function is meant to be used by pipes or other devices that can transfer resources to know if
-     * they should interact with this storage at all.
+     * <p>Return {@code false} only when {@link #insert} will always return 0.
+     * This can be used by transport code to decide whether to interact with this storage.
+     *
+     * @return {@code true} when insertion may be supported or in doubt, {@code false} when insertion will always fail.
      */
     default boolean supportsInsertion() {
         return true;
@@ -95,10 +100,12 @@ public interface Storage<T> extends Iterable<StorageView<T>> {
     long insert(T resource, long maxAmount, @NotNull TransactionContext transaction);
 
     /**
-     * Return false if calling {@link #extract} will absolutely always return 0, or true otherwise or in doubt.
+     * Return whether extraction may be supported by this storage.
      *
-     * <p>Note: This function is meant to be used by pipes or other devices that can transfer resources to know if
-     * they should interact with this storage at all.
+     * <p>Return {@code false} only when {@link #extract} will always return 0.
+     * This can be used by transport code to decide whether to interact with this storage.
+     *
+     * @return {@code true} when extraction may be supported or in doubt, {@code false} when extraction will always fail.
      */
     default boolean supportsExtraction() {
         return true;
@@ -163,10 +170,14 @@ public interface Storage<T> extends Iterable<StorageView<T>> {
      *     // Do something with the view
      * }
      * }</pre>
+     *
+     * @return An iterable over the non-empty {@link StorageView} elements of this storage.
      */
     default Iterable<StorageView<T>> nonEmptyViews() {
         return this::nonEmptyIterator;
     }
+    
+
 
     /**
      * Return an integer representing the current version of this storage instance to allow for fast change detection:
@@ -195,6 +206,8 @@ public interface Storage<T> extends Iterable<StorageView<T>> {
      *
      * <p>It is not valid to call this during a transaction,
      * and implementations are encouraged to throw an exception if that happens.
+     *
+     * @return The version identifier; changes whenever the storage may have changed.
      */
     default long getVersion() {
         if (Transaction.isOpen()) {
@@ -205,11 +218,13 @@ public interface Storage<T> extends Iterable<StorageView<T>> {
     }
 
     /**
-     * Return a class instance of this interface with the desired generic type,
-     * to be used for easier registration with API lookups.
+     * Return a {@code Class} token for {@code Storage<T>} to simplify API lookups.
+     *
+     * @param <T> The storage generic type parameter.
+     * @return A class object for {@code Storage<T>} used for API lookups.
      */
     @SuppressWarnings("unchecked")
     static <T> Class<Storage<T>> asClass() {
-        return (Class<Storage<T>>) (Object) Storage.class;
+        return (Class<Storage<T>>)(Object)Storage.class;
     }
 }

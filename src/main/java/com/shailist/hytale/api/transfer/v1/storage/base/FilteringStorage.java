@@ -43,6 +43,10 @@ import org.jetbrains.annotations.NotNull;
 public abstract class FilteringStorage<T> implements Storage<T> {
 	/**
 	 * Return a wrapper over the passed storage that prevents extraction.
+	 *
+	 * @param <T> The resource generic type.
+	 * @param backingStorage The storage to wrap.
+	 * @return A storage that allows insertion only.
 	 */
 	public static <T> Storage<T> insertOnlyOf(Storage<T> backingStorage) {
 		return of(backingStorage, true, false);
@@ -50,6 +54,10 @@ public abstract class FilteringStorage<T> implements Storage<T> {
 
 	/**
 	 * Return a wrapper over the passed storage that prevents insertion.
+	 *
+	 * @param <T> The resource generic type.
+	 * @param backingStorage The storage to wrap.
+	 * @return A storage that allows extraction only.
 	 */
 	public static <T> Storage<T> extractOnlyOf(Storage<T> backingStorage) {
 		return of(backingStorage, false, true);
@@ -57,6 +65,10 @@ public abstract class FilteringStorage<T> implements Storage<T> {
 
 	/**
 	 * Return a wrapper over the passed storage that prevents insertion and extraction.
+	 *
+	 * @param <T> The resource generic type.
+	 * @param backingStorage The storage to wrap.
+	 * @return A read-only wrapper around the backing storage.
 	 */
 	public static <T> Storage<T> readOnlyOf(Storage<T> backingStorage) {
 		return of(backingStorage, false, false);
@@ -66,9 +78,11 @@ public abstract class FilteringStorage<T> implements Storage<T> {
 	 * Return a wrapper over the passed storage that may prevent insertion or extraction, depending on the boolean parameters.
 	 * For more fine-grained control, a custom subclass of {@link FilteringStorage} should be used.
 	 *
+	 * @param <T> The resource generic type.
 	 * @param backingStorage Storage to wrap.
 	 * @param allowInsert True to allow insertion, false to block insertion.
 	 * @param allowExtract True to allow extraction, false to block extraction.
+	 * @return A filtering wrapper over {@code backingStorage} implementing the requested allowances.
 	 */
 	public static <T> Storage<T> of(Storage<T> backingStorage, boolean allowInsert, boolean allowExtract) {
 		if (allowInsert && allowExtract) {
@@ -125,10 +139,15 @@ public abstract class FilteringStorage<T> implements Storage<T> {
         }
 	}
 
+	/**
+	 * Supplier that provides the backing storage used by this filtering wrapper.
+	 */
 	protected final Supplier<Storage<T>> backingStorage;
 
 	/**
 	 * Create a new filtering storage, with a fixed backing storage.
+	 *
+	 * @param backingStorage The backing storage used by this filtering wrapper.
 	 */
 	public FilteringStorage(Storage<T> backingStorage) {
 		this(() -> backingStorage);
@@ -138,6 +157,8 @@ public abstract class FilteringStorage<T> implements Storage<T> {
 	 * Create a new filtering storage, with a supplier for the backing storage.
 	 * This allows the backing storage to change without having to create a new filtering storage.
 	 * If that is unnecessary, the other overload can be used for convenience.
+	 *
+	 * @param backingStorage Supplier that provides the backing storage used by this filtering wrapper.
 	 */
 	public FilteringStorage(Supplier<Storage<T>> backingStorage) {
 		this.backingStorage = backingStorage;
@@ -145,6 +166,9 @@ public abstract class FilteringStorage<T> implements Storage<T> {
 
 	/**
 	 * Return true if insertion of the passed resource should be forwarded to the backing storage, or false if it should fail.
+	 *
+	 * @param resource The resource to test for insertion.
+	 * @return True if insertion of the passed resource should be forwarded to the backing storage, false otherwise.
 	 */
 	protected boolean canInsert(T resource) {
 		return true;
@@ -152,6 +176,9 @@ public abstract class FilteringStorage<T> implements Storage<T> {
 
 	/**
 	 * Return true if extraction of the passed resource should be forwarded to the backing storage, or false if it should fail.
+	 *
+	 * @param resource The resource to test for extraction.
+	 * @return True if extraction of the passed resource should be forwarded to the backing storage, false otherwise.
 	 */
 	protected boolean canExtract(T resource) {
 		return true;

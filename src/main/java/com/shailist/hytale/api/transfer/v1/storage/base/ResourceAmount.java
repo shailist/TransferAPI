@@ -23,7 +23,10 @@ package com.shailist.hytale.api.transfer.v1.storage.base;
 
 /**
  * An immutable object storing both a resource and an amount, provided for convenience.
+ *
  * @param <T> The type of the stored resource.
+ * @param resource The resource stored.
+ * @param amount The amount of the stored resource.
  */
 public record ResourceAmount<T>(T resource, long amount) {
 }

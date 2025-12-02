@@ -29,6 +29,7 @@ public final class StoragePreconditions {
     /**
      * Ensure that the passed transfer variant is not blank.
      *
+     * @param variant The transfer variant to check.
      * @throws IllegalArgumentException If the variant is blank.
      */
     public static void notBlank(TransferVariant<?> variant) {
@@ -40,6 +41,7 @@ public final class StoragePreconditions {
     /**
      * Ensure that the passed amount is not negative. That is, it must be {@code >= 0}.
      *
+     * @param amount The amount to check.
      * @throws IllegalArgumentException If the amount is negative.
      */
     public static void notNegative(long amount) {
@@ -50,6 +52,9 @@ public final class StoragePreconditions {
 
     /**
      * Check both for a not blank transfer variant and a not negative amount.
+     *
+     * @param variant The transfer variant to check.
+     * @param amount The amount to check.
      */
     public static void notBlankNotNegative(TransferVariant<?> variant, long amount) {
         notBlank(variant);

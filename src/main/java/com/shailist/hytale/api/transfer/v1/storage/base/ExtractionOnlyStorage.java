@@ -25,6 +25,8 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * A {@link Storage} that supports extraction, and not insertion.
+ *
+ * @param <T> The type of resources stored by this extraction-only storage.
  */
 public interface ExtractionOnlyStorage<T> extends Storage<T> {
 	@Override

@@ -27,6 +27,8 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * A storage that can store a single transfer variant at any given time.
+ *
+ * @param <T> The transfer variant type handled by this storage.
  * Implementors should at least override {@link #getCapacity(TransferVariant)},
  * and probably {@link #onFinalCommit} as well for {@code markDirty()} and similar calls.
  *
@@ -35,24 +37,44 @@ import org.jetbrains.annotations.NotNull;
  * {@link #supportsInsertion} and/or {@link #supportsExtraction}.
  */
 public abstract class SingleVariantStorage<T extends TransferVariant<?>> extends SnapshotParticipant<ResourceAmount<T>> implements SingleSlotStorage<T> {
-	public T variant = getBlankVariant();
-	public long amount = 0;
+	/**
+	 * The currently stored variant. May be a blank variant when empty.
+	 */
+	public T variant;
 
 	/**
-	 * Return the blank variant.
-	 *
-	 * <p>Note: this is called very early in the constructor.
-	 * If fields need to be accessed from this function, make sure to re-initialize {@link #variant} yourself.
+	 * The amount of the stored variant.
 	 */
+	public long amount;
+
+	/**
+	 * Initializes the storage to a blank variant with zero amount.
+	 */
+	protected SingleVariantStorage() {
+		variant = getBlankVariant();
+		amount = 0;
+	}
+
+	/**
+	* Return the blank variant.
+	*
+	* @return The blank transfer variant for this storage type.
+	*/
 	protected abstract T getBlankVariant();
 
 	/**
-	 * Return the maximum capacity of this storage for the passed transfer variant.
-	 * If the passed variant is blank, an estimate should be returned.
-	 */
+	* Return the maximum capacity of this storage for the passed transfer variant.
+	* If the passed variant is blank, an estimate should be returned.
+	*
+	* @param variant The variant for which capacity is queried. May be blank.
+	* @return The maximum capacity for the passed variant, or an estimate if blank.
+	*/
 	protected abstract long getCapacity(T variant);
 
 	/**
+	 * Return whether the passed non-blank variant can be inserted into this storage.
+	 *
+	 * @param variant The variant to test.
 	 * @return {@code true} if the passed non-blank variant can be inserted, {@code false} otherwise.
 	 */
 	protected boolean canInsert(T variant) {
@@ -60,6 +82,9 @@ public abstract class SingleVariantStorage<T extends TransferVariant<?>> extends
 	}
 
 	/**
+	 * Return whether the passed non-blank variant can be extracted from this storage.
+	 *
+	 * @param variant The variant to test.
 	 * @return {@code true} if the passed non-blank variant can be extracted, {@code false} otherwise.
 	 */
 	protected boolean canExtract(T variant) {
@@ -70,7 +95,7 @@ public abstract class SingleVariantStorage<T extends TransferVariant<?>> extends
 	public long insert(T insertedVariant, long maxAmount, @NotNull TransactionContext transaction) {
 		StoragePreconditions.notBlankNotNegative(insertedVariant, maxAmount);
 
-		if ((insertedVariant.equals(variant) || variant.isBlank()) && canInsert(insertedVariant)) {
+		if ((variant.isBlank() || insertedVariant.equals(variant)) && canInsert(insertedVariant)) {
 			long insertedAmount = Math.min(maxAmount, getCapacity(insertedVariant) - amount);
 
 			if (insertedAmount > 0) {
@@ -94,7 +119,7 @@ public abstract class SingleVariantStorage<T extends TransferVariant<?>> extends
 	public long extract(T extractedVariant, long maxAmount, @NotNull TransactionContext transaction) {
 		StoragePreconditions.notBlankNotNegative(extractedVariant, maxAmount);
 
-		if (extractedVariant.equals(variant) && canExtract(extractedVariant)) {
+		if (!variant.isBlank() && extractedVariant.equals(variant) && canExtract(extractedVariant)) {
 			long extractedAmount = Math.min(maxAmount, amount);
 
 			if (extractedAmount > 0) {

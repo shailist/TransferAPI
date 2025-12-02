@@ -31,6 +31,9 @@ public interface StorageView<T> {
     /**
      * Try to extract a resource from this view.
      *
+     * @param resource The resource to extract. May not be blank.
+     * @param maxAmount The maximum amount to extract. May not be negative.
+     * @param transaction The transaction this operation is part of.
      * @return The amount that was extracted.
      */
     long extract(T resource, long maxAmount, @NotNull TransactionContext transaction);
@@ -40,32 +43,42 @@ public interface StorageView<T> {
      *
      * <p>This function is mostly useful when dealing with storages of arbitrary types.
      * For transfer variant storages, this should always be equivalent to {@code getResource().isBlank()}.
+     *
+     * @return {@code true} if the resource is blank, {@code false} otherwise.
      */
     boolean isResourceBlank();
 
     /**
+     * Return the resource stored in this view.
+     *
      * @return The resource stored in this view. May not be blank if {@link #isResourceBlank} is {@code false}.
      */
     T getResource();
 
     /**
+     * Return the amount of resource stored in this view.
+     *
      * @return The amount of {@link #getResource} stored in this view.
      */
     long getAmount();
 
     /**
+     * Return the total capacity of this view for the stored resource.
+     *
      * @return The total amount of {@link #getResource} that could be stored in this view,
      * or an estimated upper bound on the number of resources that could be stored if this view has a blank resource.
      */
     long getCapacity();
 
     /**
-     * If this is view is a delegate around another storage view, return the underlying view.
+     * Return the underlying delegated view if this view wraps another view.
      * This can be used to check if two views refer to the same inventory "slot".
      * <b>Do not try to extract from the underlying view, or you risk bypassing some checks.</b>
      *
      * <p>It is expected that two storage views with the same underlying view ({@code a.getUnderlyingView() == b.getUnderlyingView()})
      * share the same content, and mutating one should mutate the other. However, one of them may allow extraction, and the other may not.
+     *
+     * @return The underlying {@link StorageView} or {@code this} if none.
      */
     default StorageView<T> getUnderlyingView() {
         return this;

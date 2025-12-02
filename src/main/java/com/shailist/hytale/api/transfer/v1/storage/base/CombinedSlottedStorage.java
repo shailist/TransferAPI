@@ -33,6 +33,11 @@ import com.shailist.hytale.api.transfer.v1.storage.Storage;
  * @param <S> The class of every part. {@code ? extends Storage<T>} can be used if the parts are of different types.
  */
 public class CombinedSlottedStorage<T, S extends SlottedStorage<T>> extends CombinedStorage<T, S> implements SlottedStorage<T> {
+	/**
+	 * Create a combined slotted storage that delegates to multiple parts.
+	 *
+	 * @param parts The list of parts backing this combined storage.
+	 */
 	public CombinedSlottedStorage(List<S> parts) {
 		super(parts);
 	}

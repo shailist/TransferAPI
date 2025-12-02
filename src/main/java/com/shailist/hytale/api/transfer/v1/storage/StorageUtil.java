@@ -127,8 +127,15 @@ public final class StorageUtil {
     }
 
     /**
-     * Convenient helper to simulate an insertion, i.e. get the result of insert without modifying any state.
+     * Convenient helper to simulate an insertion, i.e. get the result of {@link Storage#insert} without modifying any state.
      * The passed transaction may be null if a new transaction should be opened for the simulation.
+     *
+     * @param storage The storage to query. May be null.
+     * @param resource The resource to simulate insertion for.
+     * @param maxAmount The maximum amount to simulate insertion for.
+     * @param transaction The transaction to use for the simulation, or {@code null} to open a nested transaction.
+     * @param <T> The type of resource.
+     * @return The amount that would be inserted without modifying state.
      * @see Storage#insert
      */
     public static <T> long simulateInsert(Storage<T> storage, T resource, long maxAmount, @Nullable TransactionContext transaction) {
@@ -138,9 +145,16 @@ public final class StorageUtil {
     }
 
     /**
-     * Convenient helper to simulate an extraction, i.e. get the result of extract without modifying any state.
+     * Convenient helper to simulate an extraction, i.e. get the result of {@link Storage#extract} without modifying any state.
      * The passed transaction may be null if a new transaction should be opened for the simulation.
-     * @see Storage#insert
+     *
+     * @param storage The storage to query. May be null.
+     * @param resource The resource to simulate extraction for.
+     * @param maxAmount The maximum amount to simulate extraction for.
+     * @param transaction The transaction to use for the simulation, or {@code null} to open a nested transaction.
+     * @param <T> The type of resource.
+     * @return The amount that would be extracted without modifying state.
+     * @see Storage#extract
      */
     public static <T> long simulateExtract(Storage<T> storage, T resource, long maxAmount, @Nullable TransactionContext transaction) {
         try (Transaction simulateTransaction = Transaction.openNested(transaction)) {
@@ -149,9 +163,16 @@ public final class StorageUtil {
     }
 
     /**
-     * Convenient helper to simulate an extraction, i.e. get the result of extract without modifying any state.
+     * Convenient helper to simulate an extraction from a {@link StorageView}, i.e. get the result of extract without modifying any state.
      * The passed transaction may be null if a new transaction should be opened for the simulation.
-     * @see Storage#insert
+     *
+     * @param storageView The storage view to query. May not be null.
+     * @param resource The resource to simulate extraction for.
+     * @param maxAmount The maximum amount to simulate extraction for.
+     * @param transaction The transaction to use for the simulation, or {@code null} to open a nested transaction.
+     * @param <T> The type of resource.
+     * @return The amount that would be extracted without modifying state.
+     * @see StorageView#extract
      */
     public static <T> long simulateExtract(StorageView<T> storageView, T resource, long maxAmount, @Nullable TransactionContext transaction) {
         try (Transaction simulateTransaction = Transaction.openNested(transaction)) {
@@ -160,10 +181,16 @@ public final class StorageUtil {
     }
 
     /**
-     * Convenient helper to simulate an extraction, i.e. get the result of extract without modifying any state.
-     * The passed transaction may be null if a new transaction should be opened for the simulation.
-     * @see Storage#insert
-     * @apiNote This function handles the method overload conflict for objects that implement both {@link Storage} and {@link StorageView}.
+     * Variant of {@link #simulateExtract(Storage, Object, long, TransactionContext)} that handles objects implementing both
+     * {@link Storage} and {@link StorageView} to disambiguate overloads.
+     *
+     * @param storage The object implementing both {@link Storage} and {@link StorageView}.
+     * @param resource The resource to simulate extraction for.
+     * @param maxAmount The maximum amount to simulate extraction for.
+     * @param transaction The transaction to use for the simulation, or {@code null} to open a nested transaction.
+     * @param <T> The resource type.
+     * @param <S> The storage/view type.
+     * @return The amount that would be extracted without modifying state.
      */
     // Object & is used to have a different erasure than the other overloads.
     public static <T, S extends Object & Storage<T> & StorageView<T>> long simulateExtract(S storage, T resource, long maxAmount, @Nullable TransactionContext transaction) {
@@ -171,20 +198,17 @@ public final class StorageUtil {
             return storage.extract(resource, maxAmount, simulateTransaction);
         }
     }
-
     /**
      * Try to extract any resource from a storage, up to a maximum amount.
      *
-     * <p>This function will only ever pull from one storage view of the storage, even if multiple storage views contain the same resource.
-     *
+     * @param <T> The resource type.
      * @param storage The storage, may be null.
      * @param maxAmount The maximum to extract.
      * @param transaction The transaction this operation is part of.
      * @return A non-blank resource and the strictly positive amount of it that was extracted from the storage,
      * or {@code null} if none could be found.
      */
-    @Nullable
-    public static <T> ResourceAmount<T> extractAny(@Nullable Storage<T> storage, long maxAmount, @NotNull TransactionContext transaction) {
+    public static <T> @Nullable ResourceAmount<T> extractAny(@Nullable Storage<T> storage, long maxAmount, @NotNull TransactionContext transaction) {
         StoragePreconditions.notNegative(maxAmount);
 
         if (storage == null) return null;
@@ -213,6 +237,11 @@ public final class StorageUtil {
      * Try to insert up to some amount of a resource into a list of storage slots, trying to "stack" first,
      * i.e. prioritizing slots that already contain the resource.
      *
+     * @param slots The list of slots to try inserting into.
+     * @param resource The resource to insert.
+     * @param maxAmount The maximum amount to insert.
+     * @param transaction The transaction this operation is part of.
+     * @param <T> The resource type.
      * @return How much was inserted.
      * @see Storage#insert
      */
@@ -250,6 +279,7 @@ public final class StorageUtil {
     /**
      * Insert resources in a storage, attempting to stack them with existing resources first if possible.
      *
+     * @param <T> The resource type.
      * @param storage The storage, may be null.
      * @param resource The resource to insert. May not be blank.
      * @param maxAmount The maximum amount of resource to insert. May not be negative.
@@ -284,6 +314,8 @@ public final class StorageUtil {
      * Attempt to find a resource stored in the passed storage.
      *
      * @see #findStoredResource(Storage, Predicate)
+     * @param storage The storage to inspect, may be null.
+     * @param <T> The resource type.
      * @return A non-blank resource stored in the storage, or {@code null} if none could be found.
      */
     @Nullable
@@ -316,7 +348,9 @@ public final class StorageUtil {
     /**
      * Attempt to find a resource stored in the passed storage that can be extracted.
      *
-     * @see #findExtractableResource(Storage, Predicate, TransactionContext)
+     * @param <T> The resource type.
+     * @param storage The storage to inspect, may be null.
+     * @param transaction The current transaction, or {@code null} if a transaction should be opened for this query.
      * @return A non-blank resource stored in the storage that can be extracted, or {@code null} if none could be found.
      */
     @Nullable
@@ -356,8 +390,10 @@ public final class StorageUtil {
     /**
      * Attempt to find a resource stored in the passed storage that can be extracted, and how much of it can be extracted.
      *
-     * @see #findExtractableContent(Storage, Predicate, TransactionContext)
-     * @return A non-blank resource stored in the storage that can be extracted, and the strictly positive amount of it that can be extracted,
+     * @param <T> The type of the stored resources.
+     * @param storage The storage to inspect, may be null.
+     * @param transaction The current transaction, or {@code null} if a transaction should be opened for this query.
+     * @return A non-blank resource stored in the storage that can be extracted and the strictly positive amount of it that can be extracted,
      * or {@code null} if none could be found.
      */
     @Nullable

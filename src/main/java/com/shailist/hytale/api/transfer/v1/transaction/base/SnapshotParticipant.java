@@ -31,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
  * A base participant implementation that modifies itself during transactions,
  * saving snapshots of its state in objects of type {@code T} in case it needs to revert to a previous state.
  *
- * <h3>How to use from subclasses</h3>
+ * <h2>How to use from subclasses</h2>
  * <ul>
  *     <li>Call {@link #updateSnapshots} right before the state of your subclass is modified in a transaction.</li>
  *     <li>Override {@link #createSnapshot}: it is called when necessary to create an object representing the state of your subclass.</li>
@@ -42,7 +42,7 @@ import org.jetbrains.annotations.NotNull;
  *     for example you may wish to pool expensive state objects.</li>
  * </ul>
  *
- * <h3>More technical explanation</h3>
+ * <h2>More technical explanation</h2>
  *
  * <p>{@link #updateSnapshots} should be called before any modification.
  * This will save the state of this participant using {@link #createSnapshot} if no state was already saved for that transaction.
@@ -57,33 +57,44 @@ import org.jetbrains.annotations.NotNull;
  * @param <T> The objects that this participant uses to save its state snapshots.
  */
 public abstract class SnapshotParticipant<T> implements Transaction.CloseCallback, Transaction.OuterCloseCallback {
+	/**
+	 * Protected no-arg constructor to satisfy doclint requirements for default constructors.
+	 */
+	protected SnapshotParticipant() {
+	}
 	private final List<T> snapshots = new ArrayList<>();
 
 	/**
 	 * Return a clone of the current state of this participant. In practice, the pattern that needs to be implemented in
-     * this method is:
-     * <pre>{@code
-     * return this.clone();
-     * }</pre>
-     * For primitive, simple, and immutable types, cloning isn't necessary, and the implementation becomes:
-     * <pre>{@code
-     * return this.value;
-     * }</pre>
+	 * this method is:
+	 * <pre>{@code
+	 * return this.clone();
+	 * }</pre>
+	 * For primitive, simple, and immutable types, cloning isn't necessary, and the implementation becomes:
+	 * <pre>{@code
+	 * return this.value;
+	 * }</pre>
+	 *
+	 * @return A non-null snapshot object that represents the current state of this participant.
 	 */
 	protected abstract @NotNull T createSnapshot();
 
 	/**
 	 * Roll back to a state previously created by {@link #createSnapshot}.
-     * In practice, this just means setting the state of the object to the given snapshot state:
-     * <pre>{@code
-     * this.value = snapshot;
-     * }</pre>
+	 * In practice, this just means setting the state of the object to the given snapshot state:
+	 * <pre>{@code
+	 * this.value = snapshot;
+	 * }</pre>
+	 *
+	 * @param snapshot The snapshot previously created by {@link #createSnapshot()}.
 	 */
 	protected abstract void readSnapshot(@NotNull T snapshot);
 
 	/**
 	 * Signals that the snapshot will not be used anymore, and is safe to cache for next calls to {@link #createSnapshot},
 	 * or discard entirely.
+	 *
+	 * @param snapshot The snapshot that will not be used anymore.
 	 */
 	protected void releaseSnapshot(T snapshot) {
 	}
@@ -99,6 +110,8 @@ public abstract class SnapshotParticipant<T> implements Transaction.CloseCallbac
 	 * Update the stored snapshots so that the changes happening as part of the passed transaction can be correctly
 	 * committed or rolled back.
 	 * This function should be called every time the participant is about to change its internal state as part of a transaction.
+	 *
+	 * @param transaction The transaction during which the state will change.
 	 */
 	public void updateSnapshots(@NotNull TransactionContext transaction) {
 		// Make sure we have enough storage for snapshots

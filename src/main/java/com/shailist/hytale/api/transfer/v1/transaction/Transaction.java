@@ -82,6 +82,7 @@ public interface Transaction extends AutoCloseable, TransactionContext {
 	/**
 	 * Open a new outer transaction.
 	 *
+	 * @return A new outer {@link Transaction}.
 	 * @throws IllegalStateException If a transaction is already active on the current thread.
 	 */
 	static Transaction openOuter() {
@@ -89,6 +90,8 @@ public interface Transaction extends AutoCloseable, TransactionContext {
 	}
 
 	/**
+	 * Check whether any transaction is open or closing on the current thread.
+	 *
 	 * @return True if a transaction is open or closing on the current thread, and false otherwise.
 	 */
 	static boolean isOpen() {
@@ -96,6 +99,8 @@ public interface Transaction extends AutoCloseable, TransactionContext {
 	}
 
 	/**
+	 * Get the current lifecycle of the transaction stack on this thread.
+	 *
 	 * @return The current lifecycle of the transaction stack on this thread.
 	 */
 	static Lifecycle getLifecycle() {
@@ -104,6 +109,9 @@ public interface Transaction extends AutoCloseable, TransactionContext {
 
 	/**
 	 * Open a nested transaction if {@code maybeParent} is non-null, or an outer transaction if {@code maybeParent} is null.
+	 *
+	 * @param maybeParent The parent transaction context, or {@code null} to open an outer transaction.
+	 * @return A new {@link Transaction} instance.
 	 */
 	static Transaction openNested(@Nullable TransactionContext maybeParent) {
 		return maybeParent == null ? openOuter() : maybeParent.openNested();
@@ -117,6 +125,7 @@ public interface Transaction extends AutoCloseable, TransactionContext {
 	 * Only use it if you have no way to pass the transaction down the stack, for example if you are implementing compat with a simulation-based API,
 	 * and you know what you are doing, for example because you opened the outer transaction.
 	 *
+	 * @return The currently open {@link TransactionContext}, or {@code null} if none is open.
 	 * @throws IllegalStateException If called from a close or outer close callback.
 	 * @deprecated Only use if you absolutely need it, there is almost always a better way.
 	 */
@@ -155,6 +164,9 @@ public interface Transaction extends AutoCloseable, TransactionContext {
 	@Override
 	void close();
 
+	/**
+	 * The lifecycle state of a transaction stack on a thread.
+	 */
 	enum Lifecycle {
 		/**
 		 * No transaction is currently open or closing.

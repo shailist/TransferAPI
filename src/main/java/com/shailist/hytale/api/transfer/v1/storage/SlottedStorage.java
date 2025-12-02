@@ -38,12 +38,16 @@ import com.shailist.hytale.impl.transfer.TransferApiImpl;
 public interface SlottedStorage<T> extends Storage<T> {
     /**
      * Retrieve the number of slots in this storage.
+     *
+     * @return The total number of slots in this storage.
      */
     int getSlotCount();
 
     /**
      * Retrieve a specific slot of this storage.
      *
+     * @param slot The slot index to retrieve.
+     * @return The corresponding {@link SingleSlotStorage} for the provided index.
      * @throws IndexOutOfBoundsException If the slot index is out of bounds.
      */
     SingleSlotStorage<T> getSlot(int slot);
@@ -52,10 +56,12 @@ public interface SlottedStorage<T> extends Storage<T> {
      * Retrieve a list containing all the slots of this storage. <b>The list must not be modified.</b>
      *
      * <p>This function can be used to interface with code that requires a slot list,
-     * for example {@link StorageUtil#insertStacking} or {@link ContainerItemContext#getAdditionalSlots()}.
+     * for example {@link StorageUtil#insertStacking}.
      *
      * <p>It is guaranteed that calling this function is fast.
      * The default implementation returns a view over the storage that delegates to {@link #getSlotCount} and {@link #getSlot}.
+     *
+     * @return An unmodifiable view over all the slots in this storage.
      */
     @UnmodifiableView
     default List<SingleSlotStorage<T>> getSlots() {

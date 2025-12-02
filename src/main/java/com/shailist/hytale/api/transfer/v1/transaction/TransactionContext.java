@@ -34,10 +34,13 @@ public interface TransactionContext {
 	 * @throws IllegalStateException If this function is not called on the thread this transaction was opened in.
 	 * @throws IllegalStateException If this transaction is not the current transaction.
 	 * @throws IllegalStateException If this transaction was closed.
+	 * @return A new nested {@link Transaction}.
 	 */
 	Transaction openNested();
 
 	/**
+	 * Get the nesting depth of this transaction.
+	 *
 	 * @return The nesting depth of this transaction: 0 if it was opened with {@link Transaction#openOuter},
 	 * 1 if its parent was opened with {@link Transaction#openOuter}, and so on...
 	 * @throws IllegalStateException If this function is not called on the thread this transaction was opened in.
@@ -48,6 +51,7 @@ public interface TransactionContext {
 	 * Return the transaction with the specific nesting depth.
 	 *
 	 * @param nestingDepth Queried nesting depth.
+	 * @return The {@link Transaction} with the requested nesting depth.
 	 * @throws IndexOutOfBoundsException If there is no open transaction with the request nesting depth.
 	 * @throws IllegalStateException If this function is not called on the thread this transaction was opened in.
 	 */
@@ -60,6 +64,7 @@ public interface TransactionContext {
 	 * <p>Updates that may change the state of other participants should be deferred until after the outermost transaction is closed
 	 * using {@link #addOuterCloseCallback}.
 	 *
+	 * @param closeCallback The callback to register.
 	 * @throws IllegalStateException If this function is not called on the thread this transaction was opened in.
 	 */
 	void addCloseCallback(CloseCallback closeCallback);
@@ -73,8 +78,7 @@ public interface TransactionContext {
 		 * Perform an action when a transaction is closed.
 		 *
 		 * @param transaction The closed transaction. Only {@link #nestingDepth}, {@link #getOpenTransaction} and {@link #addOuterCloseCallback}
-		 *                    may be called on that transaction.
-		 *                    {@link #addCloseCallback} may additionally be called on parent transactions
+		 *                    may be called on that transaction. {@link #addCloseCallback} may additionally be called on parent transactions
 		 *                    (accessed through {@link #getOpenTransaction} for lower nesting depths).
 		 * @param result The result of this transaction: whether it was committed or aborted.
 		 */
@@ -86,6 +90,7 @@ public interface TransactionContext {
 	 * and after callbacks registered with {@link #addCloseCallback} are ran.
 	 * Registered callbacks are invoked last-to-first.
 	 *
+	 * @param outerCloseCallback The callback to register.
 	 * @throws IllegalStateException If this function is not called on the thread this transaction was opened in.
 	 */
 	void addOuterCloseCallback(OuterCloseCallback outerCloseCallback);
@@ -107,10 +112,14 @@ public interface TransactionContext {
 	 * The result of a transaction operation.
 	 */
 	enum Result {
-		ABORTED,
-		COMMITTED;
+ 		/** The transaction was aborted. */
+ 		ABORTED,
+ 		/** The transaction was committed. */
+ 		COMMITTED;
 
 		/**
+		 * Check whether the result indicates an aborted transaction.
+		 *
 		 * @return true if the transaction was aborted, false if it was committed.
 		 */
 		public boolean wasAborted() {
@@ -118,6 +127,8 @@ public interface TransactionContext {
 		}
 
 		/**
+		 * Check whether the result indicates a committed transaction.
+		 *
 		 * @return true if the transaction was committed, false if it was aborted.
 		 */
 		public boolean wasCommitted() {

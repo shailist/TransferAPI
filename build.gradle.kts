@@ -1,4 +1,6 @@
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.tasks.javadoc.Javadoc
+import org.gradle.external.javadoc.StandardJavadocDocletOptions
 
 plugins {
     id("java")
@@ -32,6 +34,13 @@ tasks.test {
 }
 
 // Use default javadoc doclint settings (strict) so we can surface missing tags and improve docs.
+
+// Register common custom Javadoc tags so we can use tags such as @apiNote and @implSpec
+tasks.withType<Javadoc> {
+    (options as StandardJavadocDocletOptions).addStringOption("tag", "apiNote:a:API Note:")
+    (options as StandardJavadocDocletOptions).addStringOption("tag", "implNote:a:Implementation Note:")
+    (options as StandardJavadocDocletOptions).addStringOption("tag", "implSpec:a:Implementation Specification:")
+}
 
 publishing {
     publications {

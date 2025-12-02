@@ -26,18 +26,41 @@ import org.jspecify.annotations.Nullable;
 import com.shailist.hytale.api.transfer.v1.transaction.Transaction;
 import com.shailist.hytale.api.transfer.v1.transaction.TransactionContext;
 
+/**
+ * Internal transaction manager implementation.
+ *
+ * <p>Manages per-thread transaction stacks for the transfer API. This class is internal to the implementation
+ * and not part of the public API surface.
+ */
 public class TransactionManagerImpl {
+	/** Per-thread manager instance. */
 	public static final ThreadLocal<TransactionManagerImpl> MANAGERS = ThreadLocal.withInitial(TransactionManagerImpl::new);
+
+	/**
+	 * Create a new transaction manager for the current thread.
+	 */
+	public TransactionManagerImpl() {
+	}
 
 	private final Thread thread = Thread.currentThread();
 	private final ArrayList<TransactionImpl> stack = new ArrayList<>();
 	private final ArrayList<Transaction.OuterCloseCallback> outerCloseCallbacks = new ArrayList<>();
 	private int currentDepth = -1;
 
+	/**
+	 * Check whether the current thread has an open transaction.
+	 *
+	 * @return true if a transaction is open on this thread.
+	 */
 	public boolean isOpen() {
 		return currentDepth > -1;
 	}
 
+	/**
+	 * Open a new outer transaction for this thread.
+	 *
+	 * @return A new outer {@link com.shailist.hytale.api.transfer.v1.transaction.Transaction}.
+	 */
 	public Transaction openOuter() {
 		if (isOpen()) {
 			throw new IllegalStateException("An outer transaction is already active on this thread.");
@@ -46,6 +69,11 @@ public class TransactionManagerImpl {
 		return open();
 	}
 
+	/**
+	 * Return the current transaction context unsafely (for exceptional use-cases).
+	 *
+	 * @return The current {@link TransactionContext} or {@code null} if none is open.
+	 */
 	@Nullable
 	public TransactionContext getCurrentUnsafe() {
 		if (currentDepth == -1) {
@@ -82,6 +110,11 @@ public class TransactionManagerImpl {
 		}
 	}
 
+	/**
+	 * Get the lifecycle of the current transaction stack for this thread.
+	 *
+	 * @return The current {@link Transaction.Lifecycle}.
+	 */
 	public Transaction.Lifecycle getLifecycle() {
 		if (currentDepth == -1) {
 			return Transaction.Lifecycle.NONE;

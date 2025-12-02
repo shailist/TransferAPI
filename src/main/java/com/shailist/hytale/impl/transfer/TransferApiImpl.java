@@ -36,9 +36,21 @@ import com.shailist.hytale.api.transfer.v1.storage.StorageView;
 import com.shailist.hytale.api.transfer.v1.storage.base.SingleSlotStorage;
 import com.shailist.hytale.api.transfer.v1.transaction.TransactionContext;
 
+/**
+ * Implementation helpers for the transfer API.
+ *
+ * <p>This class contains internal utilities used by the implementation. It is not part of the public API
+ * and is intended for internal use only.
+ */
 public class TransferApiImpl {
-    public static final Logger LOGGER = LoggerFactory.getLogger("fabric-transfer-api-v1");
+    /** Logger for transfer API implementation internals. */
+    public static final Logger LOGGER = LoggerFactory.getLogger("transfer-api-v1");
+    /** Monotonic version counter used by internal storages. */
     public static final AtomicLong version = new AtomicLong();
+
+    /**
+     * Internal empty storage instance used as a placeholder where no storage is available.
+     */
     @SuppressWarnings("rawtypes")
     public static final Storage EMPTY_STORAGE = new Storage() {
         @Override
@@ -77,6 +89,15 @@ public class TransferApiImpl {
         }
     };
 
+    
+
+    /**
+     * Return an iterator that yields a single value.
+     *
+     * @param it the element to iterate over
+     * @param <T> element type
+     * @return an iterator over the single element
+     */
     public static <T> Iterator<T> singletonIterator(T it) {
         return new Iterator<T>() {
             boolean hasNext = true;
@@ -98,6 +119,13 @@ public class TransferApiImpl {
         };
     }
 
+    /**
+     * Create a view over a {@link SlottedStorage} as a {@link List} of {@link SingleSlotStorage}.
+     *
+     * @param storage the slotted storage to wrap
+     * @param <T> the resource type
+     * @return a list view of the storage slots
+     */
     public static <T> List<SingleSlotStorage<T>> makeListView(SlottedStorage<T> storage) {
         return new AbstractList<>() {
             @Override
@@ -110,6 +138,12 @@ public class TransferApiImpl {
                 return storage.getSlotCount();
             }
         };
+    }
+
+    /**
+     * Private constructor to avoid instantiation of this utility class.
+     */
+    private TransferApiImpl() {
     }
 
 //    TODO: Data Components

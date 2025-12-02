@@ -39,8 +39,16 @@ import org.jetbrains.annotations.NotNull;
  * @param <S> The class of every part. {@code ? extends Storage<T>} can be used if the parts are of different types.
  */
 public class CombinedStorage<T, S extends Storage<T>> implements Storage<T> {
+	/**
+	 * The list of backing parts that make up this combined storage. Iterated in order.
+	 */
 	public List<S> parts;
 
+	/**
+	 * Create a combined storage delegating to the provided parts.
+	 *
+	 * @param parts The list of parts backing this combined storage.
+	 */
 	public CombinedStorage(List<S> parts) {
 		this.parts = parts;
 	}

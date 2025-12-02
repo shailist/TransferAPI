@@ -11,8 +11,14 @@ import org.jetbrains.annotations.NotNull;
  * @param <T> The type of the stored object.
  */
 public class TransactionalValue<T> extends SnapshotParticipant<T> {
+    /** The current value stored by this transactional value. */
     protected @NotNull T value;
 
+    /**
+     * Create a new transactional value with the provided starting value.
+     *
+     * @param startingValue The initial stored value.
+     */
     public TransactionalValue(@NotNull T startingValue) {
         this.value = startingValue;
     }

@@ -33,11 +33,15 @@ package com.shailist.hytale.api.transfer.v1.storage;
 public interface TransferVariant<O> {
     /**
      * Return true if this variant is blank, and false otherwise.
+     *
+     * @return true if this variant is blank, false otherwise.
      */
     boolean isBlank();
 
     /**
      * Return the immutable object instance of this variant.
+     *
+     * @return The immutable object instance of this variant.
      */
     O getObject();
 
@@ -70,6 +74,9 @@ public interface TransferVariant<O> {
 
     /**
      * Return {@code true} if the object of this variant matches the passed resource.
+     *
+     * @param object The object to compare against.
+     * @return {@code true} if the object of this variant matches the passed resource, false otherwise.
      */
     default boolean isOf(O object) {
         return getObject() == object;
